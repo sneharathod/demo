@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Software Inventory</title>
+    
+	<link href="../extjs/resources/css/ext-all.css" rel="stylesheet" /> 
+    <link href="../css/Inventory.css" rel="stylesheet" /> 
+    <script src="../extjs/ext-all.js"></script>
+    
+<script>
+
+var itemsPerPage = 15;
+    
+//with rest call
+Ext.require([
+    'Ext.data.*',
+    'Ext.grid.*',
+    'Ext.tree.*',
+    'Ext.button.*',
+    'Ext.toolbar.Paging'
+]);
+
+Ext.onReady(function() {
+    
+     // functions to display feedback
+    /*function onButtonClick(btn){
+        Ext.Msg.alert('Button Click','You clicked the "' + btn.text +'" button.');
+    }*/
+    
+    function onItemClick(item){
+        //Ext.Msg.alert('Button Item Click', 'You clicked the "'+ item.text+'" menu item.');
+        var str =  'You selected Element : ';
+        var selectionArray = tree.getView().getSelectionModel().getSelection();
+        
+        for (var i = 0; i < selectionArray.length; i++) { 
+            str += selectionArray[i].data.elemName + " | ";//selectionArray[i].data contains the object 
+        }   
+        Ext.Msg.alert(item.text,str+ ' for operation '+item.text);
+       
+    }
+
+    Ext.create('Ext.button.Split', {
+            cls: 'menubuttons',
+            text: 'Pre-upgrade Actions',
+            //handler: onButtonClick,
+            tooltip: {text:'Select all pre-upgrade actions', title:'Pre-upgrade Actions'},
+            //iconCls: 'blist',
+            renderTo: 'buttonbar',        
+            // Menus can be built/referenced by using nested menu config objects
+            menu : {
+                items: [{
+                    text: 'Get Inventory', handler: onItemClick
+                }, {
+                    text: 'Analyze', handler: onItemClick
+                }, {
+                    text: 'Pre-upgrade Check', handler: onItemClick
+                }/*, '-', {
+                    text: 'Extellent!',
+                    handler: onItemClick
+                }*/
+                    ]
+            }
+        }
+    );
+    
+    Ext.create('Ext.button.Split', {
+            cls: 'menubuttons',
+            text: 'Upgrade Actions',
+            //handler: onButtonClick,
+            tooltip: {text:'Select all upgrade actions', title:'Upgrade Actions'},
+            //iconCls: 'blist',
+            renderTo: 'buttonbar',        
+            // Menus can be built/referenced by using nested menu config objects
+            menu : {
+                items: [
+                {
+                    text: 'Upgrade', handler: onItemClick
+                }, {
+                    text: 'Commit', handler: onItemClick
+                }, {
+                    text: 'Rollback', handler: onItemClick
+                }, {
+                    text: 'Resume', handler: onItemClick
+                }]
+            }
+        }
+    );
+    
+    Ext.create('Ext.button.Split', {
+            cls: 'menubuttons',
+            text: 'VM Management',
+           // handler: onButtonClick,
+            tooltip: {text:'Select all VM Management actions', title:'VM Management'},
+            //iconCls: 'blist',
+            renderTo: 'buttonbar',        
+            // Menus can be built/referenced by using nested menu config objects
+            menu : {
+                items: [{
+                    text: 'Start', handler: onItemClick
+                }, {
+                    text: 'Stop', handler: onItemClick
+                }, {
+                    text: 'Restart', handler: onItemClick
+                },{
+                    text: 'Deploy', handler: onItemClick
+                }
+                ]
+            }
+        }
+    );
+    
+    Ext.create('Ext.Button', {
+        cls: 'menubuttons',
+        text: 'Download',
+        renderTo: 'buttonbar',
+        handler: function() {//A function called when the button is clicked 
+            console.log('You clicked the Download button!');
+            //TODO: redirect to download page
+            console.log(window.location.origin);
+            window.location = window.location.origin+'/sum/faces/pages/download/downloadManager.xhtml';
+        }
+        
+    });
+    
+    Ext.create('Ext.button.Split', {
+            cls: 'menubuttons',
+            text: 'More Actions',
+            //handler: onButtonClick,
+            tooltip: {text:'Select all other actions like Backup, Reset', title:'More Actions'},
+            //iconCls: 'blist',
+            renderTo: 'buttonbar',        
+            // Menus can be built/referenced by using nested menu config objects
+            menu : {
+                items: [{
+                            text: 'Reset', handler: onItemClick
+                        }, 
+                        {
+                            text: 'Backup CM/CMM', handler: onItemClick
+                        }
+                       ]
+            }
+        }
+    );
+    
+    
+    // The data store containing the list //load from SPM..if possible!
+    var pageRows = Ext.create('Ext.data.Store', {
+        fields: ['name'],
+        data : [
+            {"name":"15"},
+            { "name":"25"},
+            {"name":"50"},
+           {"name":"100"},
+           {"name":"200"},
+           {"name":"ALL"}           
+        ]
+    });
+    
+    //combo box for number of rows to be shown in table
+    var combo = Ext.create('Ext.form.field.ComboBox', {
+        hideLabel: true,
+        fieldLabel: 'Show',
+        store: pageRows,
+        typeAhead: true,
+        queryMode: 'local',
+        triggerAction: 'all',
+        selectOnFocus: true,
+        width: 50,
+        iconCls: 'no-icon',
+        displayField: 'name',
+        valueField: 'name',
+        value: itemsPerPage,
+        multiSelect : false,
+        listeners:{
+            //scope: this,
+            select: function(combo, records, eOpts) {
+                    //console.log("SHOW records "+records[0].get('name'));
+                    itemsPerPage = records[0].get('name');
+                    console.log("SHOW itemsPerPage "+itemsPerPage);
+                   
+                }
+            }
+    });
+    
+    //we want to setup a model and store instead of using dataUrl
+    Ext.define('Element', {
+        extend: 'Ext.data.Model',
+        fields: [
+            {name: 'elemName',     type: 'string'},
+            {name: 'elemIP', type: 'string'},
+            {name: 'elemType', type: 'string'},
+            {name: 'family', type: 'string'},
+            {name: 'swVersion', type: 'string'},
+            {name: 'location', type: 'string'},
+            {name: 'actionStatus', type: 'auto'},//this is an array of object//all unknown types get set to auto 
+            {name: 'relStatus', type: 'string'},
+            {name: 'updtStatus', type: 'string'},
+            {name: 'preupgrdStatus', type: 'string'},
+            {name: 'upgrdAction', type: 'string'}
+        ],
+       hasMany: 'Element'
+    });
+    
+    var store = Ext.create('Ext.data.TreeStore', {
+        model: 'Element',
+        id:'inventoryStore',
+        autoLoad: false,
+        pageSize: itemsPerPage, // items per page
+        remotesort: true,//true if the sorting should be performed on the server side
+        proxy: {        
+            type: 'rest',
+            method: 'GET',
+            url: 'https://abc.com/orchestrator/landing/spboxiphost/abcd?getChild=true',
+            reader: {                
+                type: 'json'
+                //root: 'childElem',//Should be coming from server properly
+               // totalProperty: 'total'//FIXME: should be coming in json data from server
+            },
+            /*
+            writer: {
+                type: 'json'
+            }*/
+            success: function(element) {
+               console.log('Success Alert element '+element); 
+            }
+        },
+        folderSort: true        
+        }
+    );
+    
+    store.load({
+        scope   : this,
+        /*params:{
+            start:0,
+            limit: itemsPerPage
+        },*/
+        callback: function(records, operation, success) {
+                //the operation object contains all of the details of the load operation
+                console.log(records);
+                for (var key in records) {
+                    console.log(key + ' ElemName=> ' + records[key].data.elemName);
+                    console.log(key + ' elemIP=> ' + records[key].data.elemIP);
+                    console.log(key + ' ChildELem=> ' + records[key].data.childElem);
+                    console.log(key + ' Children => ' + records[key].data.children);                   
+                }
+            }
+        });
+    
+
+
+    //for checkboxes in table 
+    
+    var selModel = Ext.create('Ext.selection.CheckboxModel', {
+        listeners: {
+            selectionchange: function(sm, selections) {
+               // tree.down('#removeButton').setDisabled(selections.length === 0);
+                console.log(" Selection: "+selections.length);
+                for (var key in selections) {
+                    console.log(" Selection : "+selections[key].data.elemName);  //treenode contains its data in "data" obj  
+                }
+            }
+        }
+    });
+    
+    //Ext.ux.tree.TreeGrid is no longer a Ux. You can simply use a tree.TreePanel
+    var tree = Ext.create('Ext.tree.Panel', {
+        title: 'Software Inventory',
+        width: 900,
+       // height: 900,
+        //renderTo: Ext.getBody(),
+        renderTo: 'inventoryTableDiv',
+        collapsible: false,//tree is not collapsible
+        useArrows: true,
+        rootVisible: false,
+        store: store,
+        multiSelect: true,
+        singleExpand: false,//want multiple child to be selected
+        columnLines: true,
+        //for checkboxes
+        selModel: selModel,
+         
+       /* // paging bar on the bottom
+        bbar: Ext.create('Ext.PagingToolbar', {
+            store: store,
+            displayInfo: true,
+            displayMsg: 'Displaying topics {0} - {1} of {2}',
+            emptyMsg: "No inventory to display",
+            inputItemWidth: 35
+        }),*/
+        
+        // inline buttons 
+        dockedItems: [{
+            xtype: 'toolbar',
+            items: ['{0} Items', 'Show', combo ]           
+        }],
+        
+        //the 'columns' property is now 'headers'
+        columns: [{
+            xtype: 'treecolumn', //this is so we know which column will show the tree
+            text: 'Element Name',
+            flex: 2,
+            sortable: true,
+            dataIndex: 'elemName'
+        },{
+            text: 'Release',
+            flex: 1,
+            dataIndex: 'relStatus',
+            sortable: true
+        },{
+            text: 'Update',
+            flex: 1,
+            dataIndex: 'updtStatus',
+            sortable: true
+        },{
+            text: 'Action',
+            flex: 1,
+            dataIndex: 'upgrdAction',
+            sortable: true
+        },{
+            text: "Status",
+            dataIndex: "actionStatus",
+            flex: 1,
+            sortable: true,
+            renderer: function(value) {
+                /*A renderer is tied to a particular column and is passed the value that would be rendered into each cell in that column.*/
+                var showValue = "No Status";
+                for(var i =0 ; i < value.length;i++){
+                    if(value[i].iscurrent){
+                        showValue = value[i].stepstatus;
+                        break;
+                    }
+                }
+                return showValue;
+            }
+
+        },{
+            text: 'Pre-upgrade Status',
+            flex: 1,
+            dataIndex: 'preupgrdStatus',
+            sortable: true
+        },{
+            text: 'Type',
+            flex: 1,
+            dataIndex: 'elemType',
+            sortable: true
+        },{
+            text: 'IP Address',
+            flex: 1,
+            dataIndex: 'elemIP',
+            sortable: true
+        },{
+            text: 'Sw Release',
+            flex: 1,
+            dataIndex: 'swVersion',
+            sortable: true
+        },{
+            text: 'Family',
+            flex: 1,
+            dataIndex: 'family',
+            sortable: true
+        },{
+            text: 'Location',
+            flex: 1,
+            dataIndex: 'location',
+            sortable: true
+        }]
+    });
+});
+
+    
+</script>
+</head>
+<body>
+	<h4>
+         Manage Software
+    </h4>
+    <p class="warningp"> <image src='../images/warning.png' style='width:17px;height:17px'/> Configure User Setting at <a href="/">User Setting</a> and Software Library at <a href="/">Software Library</a></p>
+    <h4>Note: Analyze operation can not recommend the entitled version for devices without the correct User Settings.</h4>
+    
+    <div id="buttonbar"> 
+    
+    </div>
+    
+    <br/>
+    
+    <div id="inventoryTableDiv"> 
+    
+    </div>
+</body>
+</html>
