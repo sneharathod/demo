@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>Click the button to display the array values after the split.</p>
+
+<button onclick="myFunction()">Try it</button>
+
+<p id="demo"></p>
+<div id="divUd"></div>
+<script>
+function myFunction() {
+    var str = "How are you doing today?";
+    var res = str.split(" ");
+var body = document.getElementById("divUd");
+var inputT = document.createElement("select");
+for(var i = 0; i < res.length; i++){				console.log(res[i]);	
+var option = document.createElement("option");
+
+option.text = res[i];
+ option.value = res[i];
+			    try {
+			        inputT.add(option, null); //Standard
+			    }catch(error) {
+			        inputT.add(option); // IE only
+			    }
+				
+
+}
+inputT.value="are";	
+inputT.id="cm.hey";		
+body.appendChild(inputT);
+console.log(document.getElementById("cm.hey").id);
+}
+</script>
+
+</body>
+</html>
