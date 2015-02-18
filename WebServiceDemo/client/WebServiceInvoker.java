@@ -1,5 +1,5 @@
 
-package com.demo.webservice.client;
+package com.webservice.client;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -16,10 +16,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
-
+//FIXME: CommonLogger implementation required
 /**
  * <p>Title: WebServiceInvoker </p>
- * <p>Description: Client which will be used to Call REST APIs for managing SM Locations 
+ * <p>Description: Client which will be used to Call REST APIs 
  */
 public class WebServiceInvoker {
 
